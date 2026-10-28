@@ -1,0 +1,258 @@
+<title>Firm Collections and Calls</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Spectral:wght@500;600&display=swap">
+<style>
+/* Layout: one column operating sheet. Header strip, KPI ledger row, two daily charts, three breakdown lists, table view. */
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#14171c; --ink-2:#4a5160; --ink-3:#7a8191;
+  --rule:#e3e6ec; --grid:#eceef2; --accent:#1f3a5f; --chip:#eef1f6;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --neg:#c23b3a;
+  --f-display:"Spectral",Georgia,"Times New Roman",serif;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111318; --panel:#191c22; --ink:#eef0f4; --ink-2:#b7bcc8; --ink-3:#8a90a0;
+  --rule:#2a2e37; --grid:#242831; --accent:#9db8de; --chip:#232733;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --neg:#e66767; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111318; --panel:#191c22; --ink:#eef0f4; --ink-2:#b7bcc8; --ink-3:#8a90a0;
+  --rule:#2a2e37; --grid:#242831; --accent:#9db8de; --chip:#232733;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --neg:#e66767; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-block:24px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:1px solid var(--rule);padding-bottom:14px}
+h1{font-family:var(--f-display);font-weight:600;font-size:28px;line-height:1.15;margin:0;text-wrap:balance;color:var(--ink)}
+.sub{color:var(--ink-2);margin-top:4px}
+.stamp{color:var(--ink-3);font-size:12px;text-align:right}
+.label{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);border-radius:999px;padding:5px 12px;font:500 13px var(--f-body);cursor:pointer}
+.chip[aria-pressed="false"]{background:transparent;color:var(--ink-3)}
+.chip[aria-pressed="false"] .dot{background:transparent!important;border-color:var(--ink-3)}
+.chip:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dot{width:9px;height:9px;border-radius:50%;border:1.5px solid transparent;flex:none}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:var(--panel);border:1px solid var(--rule);border-radius:10px}
+.kpi{padding:16px 18px;border-left:1px solid var(--rule);min-width:0}
+.kpi:first-child{border-left:0}
+.kpi .v{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:4px;letter-spacing:-.01em}
+.kpi .n{color:var(--ink-3);font-size:12px;margin-top:2px}
+.v.neg{color:var(--neg)}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:16px 18px;min-width:0}
+.ph{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+h2{font-size:15px;font-weight:600;margin:0}
+.ph .meta{color:var(--ink-3);font-size:12px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{fill:var(--ink-3);font:11px var(--f-body);font-variant-numeric:tabular-nums}
+.tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--rule);box-shadow:0 4px 14px rgba(0,0,0,.12);border-radius:8px;padding:8px 10px;font-size:12px;min-width:150px;z-index:2;color:var(--ink)}
+.tip b{display:block;margin-bottom:4px}
+.tip .r{display:flex;justify-content:space-between;gap:14px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.tip .r i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.tip .r.t{color:var(--ink);font-weight:600;border-top:1px solid var(--rule);margin-top:4px;padding-top:4px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.bars{display:grid;gap:10px}
+.bar .top{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.bar .top span:last-child{font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+.bar .track{height:8px;background:var(--grid);border-radius:4px;margin-top:5px;overflow:hidden}
+.bar .fill{height:100%;border-radius:4px;background:var(--accent)}
+.bar .x{font-size:11px;color:var(--ink-3);margin-top:2px}
+details{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:12px 18px}
+summary{cursor:pointer;font-weight:600}
+.tw{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:13px}
+th,td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--ink-3);font-weight:600;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+tfoot td{font-weight:600;color:var(--ink)}
+.foot{color:var(--ink-3);font-size:12px}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{border-left:0;border-top:1px solid var(--rule)}.kpi:nth-child(-n+2){border-top:0}.kpi:nth-child(even){border-left:1px solid var(--rule)}.grid3{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){.bar .fill{transition:width .3s ease}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="label">Month to date</div>
+      <h1 id="title">Collections and Intake Calls</h1>
+      <div class="sub" id="range"></div>
+    </div>
+    <div class="stamp" id="stamp"></div>
+  </header>
+
+  <div class="filters" role="group" aria-label="Practice areas">
+    <span class="label" style="margin-right:4px">Practice area</span>
+    <span id="chips" class="filters"></span>
+  </div>
+
+  <section class="kpis" id="kpis" aria-label="Key figures"></section>
+
+  <section class="panel">
+    <div class="ph"><h2>Daily collections</h2><div class="legend" id="legend"></div></div>
+    <div class="chart" id="cashChart"></div>
+  </section>
+
+  <section class="panel">
+    <div class="ph"><h2>Inbound calls per day</h2><span class="meta" id="callMeta"></span></div>
+    <div class="chart" id="callChart"></div>
+  </section>
+
+  <div class="grid3">
+    <section class="panel"><div class="ph"><h2>By practice area</h2></div><div class="bars" id="byArea"></div></section>
+    <section class="panel"><div class="ph"><h2>By lead attorney</h2></div><div class="bars" id="byAtty"></div></section>
+    <section class="panel"><div class="ph"><h2>By payment method</h2></div><div class="bars" id="byMethod"></div></section>
+  </div>
+
+  <details>
+    <summary>Daily table</summary>
+    <div class="tw"><table id="tbl"></table></div>
+  </details>
+
+  <div class="foot">Source: MyCase payment exports (operating account deposits, net of refunds) and phone system call analytics. Amounts in USD.</div>
+</div>
+
+<script>
+const DATA = {"built":"2026-10-28T14:28Z","areas":["Criminal","Personal Injury","Estate Planning","Civil Litigation"],"payments":[{"d":"2026-10-01","a":"Criminal","amt":500.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-01","a":"Criminal","amt":1000.0,"m":"Card, payment plan","atty":"Ed Schoeler"},{"d":"2026-10-02","a":"Criminal","amt":2500.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-02","a":"Criminal","amt":500.0,"m":"Card, payment plan","atty":"Elaine Denisiu"},{"d":"2026-10-02","a":"Criminal","amt":1250.0,"m":"eCheck","atty":"Ed Schoeler"},{"d":"2026-10-02","a":"Personal Injury","amt":223.4,"m":"Trust transfer","atty":"Brandon White"},{"d":"2026-10-02","a":"Personal Injury","amt":11666.67,"m":"Trust transfer","atty":"Brandon White"},{"d":"2026-10-03","a":"Criminal","amt":1000.0,"m":"Card, payment plan","atty":"Elaine Denisiu"},{"d":"2026-10-04","a":"Criminal","amt":1000.0,"m":"Card, payment plan","atty":"Elaine Denisiu"},{"d":"2026-10-05","a":"Criminal","amt":20000.0,"m":"Check","atty":"Elaine Denisiu"},{"d":"2026-10-05","a":"Criminal","amt":400.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-05","a":"Criminal","amt":450.0,"m":"Affirm / financing","atty":"Elaine Denisiu"},{"d":"2026-10-05","a":"Criminal","amt":500.0,"m":"Card, payment plan","atty":"Ed Schoeler"},{"d":"2026-10-06","a":"Criminal","amt":1250.0,"m":"eCheck","atty":"Elaine Denisiu"},{"d":"2026-10-06","a":"Criminal","amt":1500.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-06","a":"Criminal","amt":6000.0,"m":"Affirm / financing","atty":"Ed Schoeler"},{"d":"2026-10-06","a":"Criminal","amt":7000.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-06","a":"Personal Injury","amt":6166.67,"m":"Check","atty":"Brandon White"},{"d":"2026-10-06","a":"Personal Injury","amt":387.58,"m":"Check","atty":"Brandon White"},{"d":"2026-10-06","a":"Estate Planning","amt":82.89,"m":"Trust transfer","atty":"Amy Dodell"},{"d":"2026-10-06","a":"Estate Planning","amt":315.49,"m":"Trust transfer","atty":"Amy Dodell"},{"d":"2026-10-06","a":"Estate Planning","amt":248.51,"m":"Trust transfer","atty":"Amy Dodell"},{"d":"2026-10-06","a":"Estate Planning","amt":5018.75,"m":"Trust transfer","atty":"Amy Dodell"},{"d":"2026-10-06","a":"Estate Planning","amt":540.72,"m":"Trust transfer","atty":"Amy Dodell"},{"d":"2026-10-06","a":"Estate Planning","amt":247.5,"m":"Trust transfer","atty":"Amy Dodell"},{"d":"2026-10-06","a":"Estate Planning","amt":490.0,"m":"Trust transfer","atty":"Amy Dodell"},{"d":"2026-10-06","a":"Estate Planning","amt":1202.5,"m":"Trust transfer","atty":"Amy Dodell"},{"d":"2026-10-06","a":"Civil Litigation","amt":42450.0,"m":"Check","atty":"Ed Schoeler"},{"d":"2026-10-06","a":"Civil Litigation","amt":2087.5,"m":"Check","atty":"Ed Schoeler"},{"d":"2026-10-06","a":"Civil Litigation","amt":11750.0,"m":"Check","atty":"Ed Schoeler"},{"d":"2026-10-07","a":"Criminal","amt":1400.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-07","a":"Estate Planning","amt":35.86,"m":"Card","atty":"Amy Dodell"},{"d":"2026-10-08","a":"Criminal","amt":1000.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-08","a":"Criminal","amt":1000.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-08","a":"Criminal","amt":3000.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-08","a":"Criminal","amt":1700.0,"m":"Check","atty":"Elaine Denisiu"},{"d":"2026-10-08","a":"Criminal","amt":1060.0,"m":"Check","atty":"Elaine Denisiu"},{"d":"2026-10-08","a":"Criminal","amt":3160.0,"m":"Check","atty":"Elaine Denisiu"},{"d":"2026-10-08","a":"Criminal","amt":3150.0,"m":"Check","atty":"Elaine Denisiu"},{"d":"2026-10-09","a":"Criminal","amt":8500.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-09","a":"Criminal","amt":750.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-09","a":"Criminal","amt":400.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-09","a":"Criminal","amt":800.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-09","a":"Criminal","amt":2000.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-10","a":"Criminal","amt":1100.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-10","a":"Criminal","amt":150.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-12","a":"Criminal","amt":2500.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-12","a":"Criminal","amt":500.0,"m":"Card, payment plan","atty":"Ed Schoeler"},{"d":"2026-10-13","a":"Criminal","amt":5000.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-13","a":"Criminal","amt":3500.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-13","a":"Criminal","amt":2500.0,"m":"Affirm / financing","atty":"Elaine Denisiu"},{"d":"2026-10-13","a":"Criminal","amt":7500.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-13","a":"Criminal","amt":2000.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-14","a":"Criminal","amt":200.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-15","a":"Criminal","amt":400.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-15","a":"Criminal","amt":2000.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-15","a":"Criminal","amt":6500.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-16","a":"Criminal","amt":2000.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-16","a":"Criminal","amt":2500.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-16","a":"Criminal","amt":650.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-18","a":"Criminal","amt":200.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-19","a":"Criminal","amt":1250.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-19","a":"Criminal","amt":5000.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-19","a":"Criminal","amt":500.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-19","a":"Criminal","amt":5000.0,"m":"Trust transfer","atty":"Ed Schoeler"},{"d":"2026-10-19","a":"Criminal","amt":1250.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-19","a":"Criminal","amt":2000.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-19","a":"Criminal","amt":1500.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-19","a":"Criminal","amt":500.0,"m":"Card, payment plan","atty":"Ed Schoeler"},{"d":"2026-10-20","a":"Criminal","amt":1000.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-20","a":"Criminal","amt":1100.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-20","a":"Criminal","amt":500.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-21","a":"Criminal","amt":500.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-21","a":"Criminal","amt":300.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-21","a":"Criminal","amt":2500.0,"m":"Card","atty":"Ed Schoeler"},{"d":"2026-10-21","a":"Personal Injury","amt":2946.73,"m":"Check","atty":"Brandon White"},{"d":"2026-10-21","a":"Personal Injury","amt":211.11,"m":"Check","atty":"Brandon White"},{"d":"2026-10-22","a":"Criminal","amt":-2890.0,"m":"Refund","atty":"Erin Dohnalek"},{"d":"2026-10-22","a":"Criminal","amt":2000.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-22","a":"Criminal","amt":1100.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-22","a":"Criminal","amt":300.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-22","a":"Criminal","amt":1500.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-22","a":"Criminal","amt":6600.0,"m":"Check","atty":"Ed Schoeler"},{"d":"2026-10-22","a":"Criminal","amt":250.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-22","a":"Criminal","amt":100.0,"m":"Card","atty":"Brandon White"},{"d":"2026-10-23","a":"Criminal","amt":1000.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-23","a":"Criminal","amt":2600.0,"m":"Card","atty":"Erin Dohnalek"},{"d":"2026-10-24","a":"Criminal","amt":400.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-26","a":"Criminal","amt":100.0,"m":"Card","atty":"Elaine Denisiu"},{"d":"2026-10-26","a":"Criminal","amt":900.0,"m":"Card, payment plan","atty":"Elaine Denisiu"},{"d":"2026-10-26","a":"Criminal","amt":500.0,"m":"Card, payment plan","atty":"Ed Schoeler"},{"d":"2026-10-26","a":"Personal Injury","amt":12500.0,"m":"Check","atty":"Unassigned"},{"d":"2026-10-26","a":"Personal Injury","amt":358.79,"m":"Check","atty":"Unassigned"}],"calls":{"2026-10-01":{"Inbound":38,"Outbound":0,"Toll free":0,"International":0},"2026-10-02":{"Inbound":23,"Outbound":0,"Toll free":0,"International":0},"2026-10-03":{"Inbound":0,"Outbound":0,"Toll free":0,"International":0},"2026-10-04":{"Inbound":2,"Outbound":0,"Toll free":0,"International":0},"2026-10-05":{"Inbound":29,"Outbound":0,"Toll free":0,"International":0},"2026-10-06":{"Inbound":49,"Outbound":0,"Toll free":0,"International":0},"2026-10-07":{"Inbound":36,"Outbound":0,"Toll free":0,"International":0},"2026-10-08":{"Inbound":29,"Outbound":0,"Toll free":0,"International":0},"2026-10-09":{"Inbound":30,"Outbound":0,"Toll free":0,"International":0},"2026-10-10":{"Inbound":6,"Outbound":0,"Toll free":0,"International":0},"2026-10-11":{"Inbound":3,"Outbound":0,"Toll free":0,"International":0},"2026-10-12":{"Inbound":26,"Outbound":0,"Toll free":0,"International":0},"2026-10-13":{"Inbound":28,"Outbound":0,"Toll free":0,"International":0},"2026-10-14":{"Inbound":27,"Outbound":0,"Toll free":0,"International":0},"2026-10-15":{"Inbound":36,"Outbound":0,"Toll free":0,"International":0},"2026-10-16":{"Inbound":31,"Outbound":0,"Toll free":0,"International":0},"2026-10-17":{"Inbound":7,"Outbound":0,"Toll free":0,"International":0},"2026-10-18":{"Inbound":7,"Outbound":0,"Toll free":0,"International":0},"2026-10-19":{"Inbound":42,"Outbound":0,"Toll free":0,"International":0},"2026-10-20":{"Inbound":30,"Outbound":0,"Toll free":0,"International":0},"2026-10-21":{"Inbound":51,"Outbound":0,"Toll free":0,"International":0},"2026-10-22":{"Inbound":41,"Outbound":0,"Toll free":0,"International":0},"2026-10-23":{"Inbound":34,"Outbound":0,"Toll free":0,"International":0},"2026-10-24":{"Inbound":6,"Outbound":0,"Toll free":0,"International":0},"2026-10-25":{"Inbound":7,"Outbound":0,"Toll free":0,"International":0},"2026-10-26":{"Inbound":30,"Outbound":0,"Toll free":0,"International":0},"2026-10-27":{"Inbound":7,"Outbound":0,"Toll free":0,"International":0}}};
+const COLORS = ["--s1","--s2","--s3","--s4"];
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const usd = (n, d=0) => (n<0?"-":"") + "$" + Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const short = n => n>=1000 ? "$"+(n/1000).toFixed(n>=10000?0:1)+"k" : "$"+Math.round(n);
+const fmtDay = s => { const d=new Date(s+"T12:00:00"); return d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}); };
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let active = new Set(DATA.areas);
+try { const s = JSON.parse(localStorage.getItem("areas")); if (Array.isArray(s) && s.length) active = new Set(s.filter(a=>DATA.areas.includes(a))); } catch(e){}
+
+// full day axis: first of month through latest date in either source
+const allDates = [...DATA.payments.map(p=>p.d), ...Object.keys(DATA.calls)].sort();
+const last = allDates[allDates.length-1];
+const first = last.slice(0,8)+"01";
+const days = [];
+for (let d=new Date(first+"T12:00:00"); d<=new Date(last+"T12:00:00"); d.setDate(d.getDate()+1)) days.push(d.toISOString().slice(0,10));
+const lastPay = DATA.payments.length ? DATA.payments[DATA.payments.length-1].d : first;
+const callDays = Object.keys(DATA.calls).sort();
+const lastCall = callDays[callDays.length-1];
+const monthName = new Date(first+"T12:00:00").toLocaleDateString("en-US",{month:"long",year:"numeric"});
+
+document.getElementById("range").textContent = `${monthName} · payments through ${fmtDay(lastPay)}` + (lastCall?` · calls through ${fmtDay(lastCall)}`:"");
+document.getElementById("stamp").textContent = "Updated " + new Date(DATA.built).toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+
+// chips
+const chips = document.getElementById("chips");
+DATA.areas.forEach((a,i)=>{
+  const b=document.createElement("button"); b.className="chip"; b.type="button"; b.id="chip-"+i;
+  b.innerHTML=`<span class="dot" style="background:var(${COLORS[i]})"></span>${esc(a)}`;
+  b.onclick=()=>{ if(active.has(a)){ if(active.size>1) active.delete(a);} else active.add(a);
+    try{localStorage.setItem("areas",JSON.stringify([...active]))}catch(e){} render(); };
+  chips.appendChild(b);
+});
+document.getElementById("legend").innerHTML = DATA.areas.map((a,i)=>`<span data-a="${esc(a)}"><span class="dot" style="background:var(${COLORS[i]})"></span>${esc(a)}</span>`).join("");
+
+function tipAt(box, el, html, x, y){
+  el.innerHTML=html; el.hidden=false;
+  const w=el.offsetWidth, bw=box.clientWidth;
+  let left=x+14; if(left+w>bw) left=x-w-14; if(left<0) left=0;
+  el.style.left=left+"px"; el.style.top=Math.max(0,y-10)+"px";
+}
+
+function barChart(host, series, opts){
+  // series: [{key,color,values[]}] stacked; values aligned with days
+  const W=1100, H=opts.h||260, m={t:12,r:8,b:26,l:opts.l||48};
+  const iw=W-m.l-m.r, ih=H-m.t-m.b, n=days.length, bw=iw/n;
+  const totals=days.map((_,i)=>series.reduce((s,se)=>s+Math.max(0,se.values[i]),0));
+  const raw=Math.max(1,...totals);
+  const step=niceStep(raw/4), max=Math.ceil(raw/step)*step;
+  const y=v=>m.t+ih-(v/max)*ih;
+  let g="";
+  for(let v=0; v<=max+1e-9; v+=step){ g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="${css('--grid')}" stroke-width="1"/><text x="${m.l-8}" y="${y(v)+4}" text-anchor="end">${opts.fmt(v)}</text>`; }
+  let bars="";
+  const gap=Math.min(6,bw*0.3);
+  days.forEach((d,i)=>{
+    let acc=0; const x=m.l+i*bw+gap/2, w=bw-gap;
+    const segs=series.filter(se=>se.values[i]>0);
+    segs.forEach((se,k)=>{
+      const v=se.values[i], y0=y(acc), y1=y(acc+v); acc+=v;
+      const h=Math.max(0,y0-y1-(k<segs.length-1?0:0));
+      const topRound = k===segs.length-1;
+      bars+= topRound ? `<path d="${roundTop(x,y1,w,h-(k>0?2:0)+ (k>0?0:0),3)}" fill="${css(se.color)}"/>`
+                      : `<rect x="${x}" y="${y1+ (k>0?0:0)}" width="${w}" height="${Math.max(0,h-2)}" fill="${css(se.color)}"/>`;
+    });
+    const dt=new Date(d+"T12:00:00"); const day=dt.getDate();
+    if(day===1||day%5===0) bars+=`<text x="${x+w/2}" y="${H-8}" text-anchor="middle">${dt.toLocaleDateString("en-US",{month:"short"})} ${day}</text>`;
+    const we = dt.getDay()===0||dt.getDay()===6;
+    if(we) bars+=`<rect x="${m.l+i*bw}" y="${H-m.b+2}" width="${bw}" height="2" fill="${css('--rule')}"/>`;
+  });
+  let hits=days.map((d,i)=>`<rect class="hit" data-i="${i}" x="${m.l+i*bw}" y="${m.t}" width="${bw}" height="${ih}" fill="transparent"/>`).join("");
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.label)}">${g}<line x1="${m.l}" x2="${W-m.r}" y1="${y(0)}" y2="${y(0)}" stroke="${css('--ink-3')}" stroke-width="1"/>${bars}${hits}</svg><div class="tip" hidden></div>`;
+  const svg=host.querySelector("svg"), tip=host.querySelector(".tip");
+  svg.addEventListener("mousemove",e=>{
+    const t=e.target.closest(".hit"); if(!t){tip.hidden=true;return;}
+    const i=+t.dataset.i, r=host.getBoundingClientRect();
+    tipAt(host, tip, opts.tip(i), e.clientX-r.left, e.clientY-r.top);
+  });
+  svg.addEventListener("mouseleave",()=>tip.hidden=true);
+}
+function roundTop(x,y,w,h,r){ if(h<=0) return ""; r=Math.min(r,w/2,h); return `M${x},${y+h}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h}Z`; }
+function niceStep(v){ const p=Math.pow(10,Math.floor(Math.log10(v))); const f=v/p; return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p; }
+
+function barList(el, rows, total, colorFn, unit){
+  const max=Math.max(...rows.map(r=>r.v),1);
+  el.innerHTML=rows.map(r=>`<div class="bar"><div class="top"><span>${esc(r.k)}</span><span>${usd(r.v)}</span></div>
+    <div class="track"><div class="fill" style="width:${Math.max(0,r.v/max*100)}%;background:${colorFn(r.k)}"></div></div>
+    <div class="x">${r.v<0?`${r.n} ${r.n===1?"refund":"refunds"} · deducted from total`:`${r.c} ${r.c===1?unit:unit+"s"} · ${total?Math.round(r.v/total*100):0}% of total`}</div></div>`).join("");
+}
+function group(rows, key){
+  const m={}; rows.forEach(p=>{ const k=p[key]; m[k]=m[k]||{k,v:0,c:0,n:0}; m[k].v+=p.amt; m[k].n++; if(p.amt>0) m[k].c++; });
+  return Object.values(m).sort((a,b)=>b.v-a.v);
+}
+
+function render(){
+  DATA.areas.forEach((a,i)=>document.getElementById("chip-"+i).setAttribute("aria-pressed", active.has(a)));
+  document.querySelectorAll("#legend [data-a]").forEach(s=>s.hidden=!active.has(s.dataset.a));
+  const P=DATA.payments.filter(p=>active.has(p.a));
+  const net=P.reduce((s,p)=>s+p.amt,0);
+  const pos=P.filter(p=>p.amt>0), refunds=P.filter(p=>p.amt<0);
+  const refundAmt=refunds.reduce((s,p)=>s+p.amt,0);
+  const inbound=callDays.reduce((s,d)=>s+(DATA.calls[d].Inbound||0),0);
+  const bizDays=callDays.filter(d=>{const w=new Date(d+"T12:00:00").getDay(); return w>0&&w<6;});
+  const bizCalls=bizDays.reduce((s,d)=>s+(DATA.calls[d].Inbound||0),0);
+  const filtered = active.size<DATA.areas.length;
+  document.getElementById("kpis").innerHTML=[
+    ["Net collected", usd(net), filtered?`${active.size} of ${DATA.areas.length} practice areas`:"All practice areas"],
+    ["Payments", pos.length.toLocaleString(), `${new Set(pos.map(p=>p.d)).size} days with deposits`],
+    ["Average payment", usd(pos.length?pos.reduce((s,p)=>s+p.amt,0)/pos.length:0), "Excludes refunds"],
+    ["Inbound calls", inbound.toLocaleString(), `${bizDays.length?Math.round(bizCalls/bizDays.length):0} per weekday · firm-wide`],
+    ["Refunds", usd(refundAmt), `${refunds.length} ${refunds.length===1?"refund":"refunds"}`, refundAmt<0?"neg":""],
+  ].map(([l,v,n,c])=>`<div class="kpi"><div class="label">${l}</div><div class="v ${c||""}">${v}</div><div class="n">${n}</div></div>`).join("");
+
+  // daily collections, stacked by area (net per area per day)
+  const series=DATA.areas.map((a,i)=>({key:a,color:COLORS[i],values:days.map(d=>active.has(a)?P.filter(p=>p.a===a&&p.d===d).reduce((s,p)=>s+p.amt,0):0)}));
+  barChart(document.getElementById("cashChart"), series, {h:280, l:54, fmt:short, label:"Daily collections by practice area",
+    tip:i=>{ const rows=series.filter(s=>s.values[i]!==0); const t=rows.reduce((s,r)=>s+r.values[i],0);
+      return `<b>${fmtDay(days[i])}</b>`+(rows.length?rows.map(r=>`<div class="r"><span><i style="background:${css(r.color)}"></i>${esc(r.key)}</span><span>${usd(r.values[i],2)}</span></div>`).join("")+`<div class="r t"><span>Total</span><span>${usd(t,2)}</span></div>`:`<div class="r"><span>No deposits</span></div>`); }});
+
+  // calls
+  const cs=[{key:"Inbound",color:"--accent",values:days.map(d=>DATA.calls[d]?DATA.calls[d].Inbound||0:0)}];
+  barChart(document.getElementById("callChart"), cs, {h:200, l:54, fmt:v=>Math.round(v), label:"Inbound calls per day",
+    tip:i=>{ const c=DATA.calls[days[i]]; return `<b>${fmtDay(days[i])}</b>`+(c?Object.entries(c).map(([k,v])=>`<div class="r"><span>${esc(k)}</span><span>${v}</span></div>`).join(""):`<div class="r"><span>No call data yet</span></div>`); }});
+  const other=callDays.reduce((s,d)=>s+Object.entries(DATA.calls[d]).filter(([k])=>k!=="Inbound").reduce((a,[,v])=>a+v,0),0);
+  document.getElementById("callMeta").textContent = other?`${other} outbound / other calls not shown`:"Outbound, toll free and international were zero all month";
+
+  barList(document.getElementById("byArea"), group(P,"a"), net, k=>`var(${COLORS[DATA.areas.indexOf(k)]})`, "payment");
+  barList(document.getElementById("byAtty"), group(P,"atty"), net, ()=>"var(--accent)", "payment");
+  barList(document.getElementById("byMethod"), group(P,"m"), net, k=>k==="Refund"?"var(--neg)":"var(--accent)", "payment");
+
+  // table
+  const act=DATA.areas.filter(a=>active.has(a));
+  let rows=days.map((d,i)=>{ const vals=act.map(a=>series[DATA.areas.indexOf(a)].values[i]); const t=vals.reduce((s,v)=>s+v,0);
+    return `<tr><td>${fmtDay(d)}</td>${vals.map(v=>`<td>${v?usd(v,2):"–"}</td>`).join("")}<td>${t?usd(t,2):"–"}</td><td>${DATA.calls[d]?DATA.calls[d].Inbound:"–"}</td></tr>`; }).join("");
+  const foot=act.map(a=>usd(series[DATA.areas.indexOf(a)].values.reduce((s,v)=>s+v,0),2));
+  document.getElementById("tbl").innerHTML=`<thead><tr><th>Day</th>${act.map(a=>`<th>${esc(a)}</th>`).join("")}<th>Total</th><th>Inbound calls</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Month to date</td>${foot.map(v=>`<td>${v}</td>`).join("")}<td>${usd(net,2)}</td><td>${inbound}</td></tr></tfoot>`;
+}
+render();
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",render);
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+</script>
