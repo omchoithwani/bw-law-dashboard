@@ -53,7 +53,8 @@ h2{font-size:15px;font-weight:600;margin:0}
 .tip .r{display:flex;justify-content:space-between;gap:14px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
 .tip .r i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
 .tip .r.t{color:var(--ink);font-weight:600;border-top:1px solid var(--rule);margin-top:4px;padding-top:4px}
-.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.bars.cols{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px}
 .bars{display:grid;gap:10px}
 .bar .top{display:flex;justify-content:space-between;gap:10px;font-size:13px}
 .bar .top span:last-child{font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
@@ -69,7 +70,7 @@ th:first-child,td:first-child{text-align:left}
 th{color:var(--ink-3);font-weight:600;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
 tfoot td{font-weight:600;color:var(--ink)}
 .foot{color:var(--ink-3);font-size:12px}
-@media (max-width:860px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{border-left:0;border-top:1px solid var(--rule)}.kpi:nth-child(-n+2){border-top:0}.kpi:nth-child(even){border-left:1px solid var(--rule)}.grid3{grid-template-columns:1fr}}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi{border-left:0;border-top:1px solid var(--rule)}.kpi:nth-child(-n+2){border-top:0}.kpi:nth-child(even){border-left:1px solid var(--rule)}.grid2,.bars.cols{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:no-preference){.bar .fill{transition:width .3s ease}}
 </style>
 
@@ -90,6 +91,11 @@ tfoot td{font-weight:600;color:var(--ink)}
 
   <section class="kpis" id="kpis" aria-label="Key figures"></section>
 
+  <div class="grid2">
+    <section class="panel"><div class="ph"><h2>Net revenue, month to date</h2><span class="meta" id="cumRevMeta"></span></div><div class="chart" id="cumRev"></div></section>
+    <section class="panel"><div class="ph"><h2>Inbound calls, month to date</h2><span class="meta" id="cumCallMeta"></span></div><div class="chart" id="cumCalls"></div></section>
+  </div>
+
   <section class="panel">
     <div class="ph"><h2>Daily collections</h2><div class="legend" id="legend"></div></div>
     <div class="chart" id="cashChart"></div>
@@ -100,18 +106,14 @@ tfoot td{font-weight:600;color:var(--ink)}
     <div class="chart" id="callChart"></div>
   </section>
 
-  <div class="grid3">
-    <section class="panel"><div class="ph"><h2>By practice area</h2></div><div class="bars" id="byArea"></div></section>
-    <section class="panel"><div class="ph"><h2>By lead attorney</h2></div><div class="bars" id="byAtty"></div></section>
-    <section class="panel"><div class="ph"><h2>By payment method</h2></div><div class="bars" id="byMethod"></div></section>
-  </div>
+  <section class="panel"><div class="ph"><h2>By practice area</h2></div><div class="bars cols" id="byArea"></div></section>
 
   <details>
     <summary>Daily table</summary>
     <div class="tw"><table id="tbl"></table></div>
   </details>
 
-  <div class="foot">Source: MyCase payment exports (operating account deposits, net of refunds) and phone system call analytics. Amounts in USD.</div>
+  <div class="foot">Source: MyCase payment exports and phone system call analytics, plus figures entered directly for days not yet exported. Operating account deposits, net of refunds. Amounts in USD.</div>
 </div>
 
 <script>
@@ -195,6 +197,38 @@ function barChart(host, series, opts){
   });
   svg.addEventListener("mouseleave",()=>tip.hidden=true);
 }
+function lineChart(host, vals, opts){
+  const W=540, H=240, m={t:16,r:64,b:26,l:52}, iw=W-m.l-m.r, ih=H-m.t-m.b, n=days.length;
+  const pts=vals.map((v,i)=>v==null?null:[m.l+(n>1?i/(n-1):0)*iw, v]);
+  const raw=Math.max(1,...vals.filter(v=>v!=null)), step=niceStep(raw/4), max=Math.ceil(raw/step)*step;
+  const y=v=>m.t+ih-(Math.max(0,v)/max)*ih;
+  const P=pts.filter(Boolean).map(([x,v])=>[x,y(v)]);
+  let g="";
+  for(let v=0; v<=max+1e-9; v+=step) g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(v)}" y2="${y(v)}" stroke="${css('--grid')}"/><text x="${m.l-8}" y="${y(v)+4}" text-anchor="end">${opts.fmt(v)}</text>`;
+  days.forEach((d,i)=>{ const day=+d.slice(8); if(day===1||day%5===0) g+=`<text x="${m.l+(n>1?i/(n-1):0)*iw}" y="${H-8}" text-anchor="middle">${new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short"})} ${day}</text>`; });
+  const col=css(opts.color);
+  let path="", area="", end="";
+  if(P.length){
+    path=`<path d="M${P.map(p=>p.join(",")).join("L")}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>`;
+    area=`<path d="M${P[0][0]},${y(0)}L${P.map(p=>p.join(",")).join("L")}L${P[P.length-1][0]},${y(0)}Z" fill="${col}" fill-opacity=".12"/>`;
+    const L=P[P.length-1], lv=vals.filter(v=>v!=null).pop();
+    end=`<circle cx="${L[0]}" cy="${L[1]}" r="4.5" fill="${col}" stroke="${css('--panel')}" stroke-width="2"/><text x="${L[0]+8}" y="${L[1]+4}" style="fill:${css('--ink')};font-weight:600">${opts.fmt(lv)}</text>`;
+  }
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.label)}">${g}<line x1="${m.l}" x2="${W-m.r}" y1="${y(0)}" y2="${y(0)}" stroke="${css('--ink-3')}"/>${area}${path}<line class="xh" x1="0" x2="0" y1="${m.t}" y2="${y(0)}" stroke="${css('--ink-3')}" stroke-dasharray="3 3" visibility="hidden"/><circle class="xd" r="4" fill="${col}" stroke="${css('--panel')}" stroke-width="2" visibility="hidden"/>${end}<rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent" class="ov"/></svg><div class="tip" hidden></div>`;
+  const svg=host.querySelector("svg"), tip=host.querySelector(".tip"), xh=svg.querySelector(".xh"), xd=svg.querySelector(".xd");
+  svg.addEventListener("mousemove",e=>{
+    const r=svg.getBoundingClientRect(), sx=(e.clientX-r.left)*W/r.width;
+    const i=Math.max(0,Math.min(n-1,Math.round((sx-m.l)/iw*(n-1))));
+    if(vals[i]==null){ tip.hidden=true; xh.setAttribute("visibility","hidden"); xd.setAttribute("visibility","hidden"); return; }
+    const px=m.l+(n>1?i/(n-1):0)*iw, py=y(vals[i]);
+    xh.setAttribute("x1",px); xh.setAttribute("x2",px); xh.setAttribute("visibility","visible");
+    xd.setAttribute("cx",px); xd.setAttribute("cy",py); xd.setAttribute("visibility","visible");
+    const day=vals[i]-(i>0&&vals[i-1]!=null?vals[i-1]:0);
+    const hr=host.getBoundingClientRect();
+    tipAt(host, tip, `<b>${fmtDay(days[i])}</b><div class="r t" style="border:0;margin:0;padding:0"><span>Month to date</span><span>${opts.full(vals[i])}</span></div><div class="r"><span>That day</span><span>${opts.full(day)}</span></div>`, e.clientX-hr.left, e.clientY-hr.top);
+  });
+  svg.addEventListener("mouseleave",()=>{ tip.hidden=true; xh.setAttribute("visibility","hidden"); xd.setAttribute("visibility","hidden"); });
+}
 function roundTop(x,y,w,h,r){ if(h<=0) return ""; r=Math.min(r,w/2,h); return `M${x},${y+h}V${y+r}Q${x},${y} ${x+r},${y}H${x+w-r}Q${x+w},${y} ${x+w},${y+r}V${y+h}Z`; }
 function niceStep(v){ const p=Math.pow(10,Math.floor(Math.log10(v))); const f=v/p; return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p; }
 
@@ -242,8 +276,15 @@ function render(){
   document.getElementById("callMeta").textContent = other?`${other} outbound / other calls not shown`:"Outbound, toll free and international were zero all month";
 
   barList(document.getElementById("byArea"), group(P,"a"), net, k=>`var(${COLORS[DATA.areas.indexOf(k)]})`, "payment");
-  barList(document.getElementById("byAtty"), group(P,"atty"), net, ()=>"var(--accent)", "payment");
-  barList(document.getElementById("byMethod"), group(P,"m"), net, k=>k==="Refund"?"var(--neg)":"var(--accent)", "payment");
+
+  // cumulative charts, plotted only through each source's latest day
+  const payIdx=days.indexOf(lastPay), callIdx=days.indexOf(lastCall);
+  let run=0; const cumRev=days.map((d,i)=>{ run+=series.reduce((s,se)=>s+se.values[i],0); return i<=payIdx?run:null; });
+  run=0; const cumCalls=days.map((d,i)=>{ run+=(DATA.calls[d]?DATA.calls[d].Inbound||0:0); return i<=callIdx?run:null; });
+  lineChart(document.getElementById("cumRev"), cumRev, {color:"--s1", fmt:short, full:v=>usd(v), label:"Cumulative net revenue"});
+  lineChart(document.getElementById("cumCalls"), cumCalls, {color:"--accent", fmt:v=>Math.round(v).toLocaleString(), full:v=>v.toLocaleString()+" calls", label:"Cumulative inbound calls"});
+  document.getElementById("cumRevMeta").textContent = filtered ? `${active.size} of ${DATA.areas.length} areas` : "";
+  document.getElementById("cumCallMeta").textContent = "Firm-wide";
 
   // table
   const act=DATA.areas.filter(a=>active.has(a));
